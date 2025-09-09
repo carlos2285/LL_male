@@ -1,0 +1,17 @@
+tabulados:
+  - name: Perfil automático
+    tables:
+      - freq: "nvivienda__1"
+      - freq: "enc"
+      - freq: "sexo_jefe_estr_hg1"
+      - freq: "p004"
+      - freq: "p004nm"
+      - freq: "p006"
+      - freq: "p007"
+      - freq: "p008"
+      - crosstab:
+          row: "nvivienda__1"
+          col: "enc"
+      - crosstab:
+          row: "sexo_jefe_estr_hg1"
+          col: "p004"

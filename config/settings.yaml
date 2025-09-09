@@ -1,0 +1,15 @@
+id_col: "interview__id"
+weight_col: null
+lat_col: "p002__Latitude"
+lon_col: "p002__Longitude"
+key_filter_col: "id_e"
+data_path: "data/encuesta.csv"
+codebook_path: "data/Codebook.xlsx"
+polygons_path: "data/polygons.geojson"
+
+# Valores tratados como 'missing' (por variable)
+missing_as: []
+
+# Si tu codebook está en formato 'largo', espera columnas:
+#   variable, value, label_value, label_variable
+codebook_long: true
