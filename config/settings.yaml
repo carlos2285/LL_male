@@ -1,10 +1,10 @@
-id_col: "llave"
+id_col: llave
 weight_col: null
-lat_col: "p002__Latitude"
-lon_col: "p002__Longitude"
-key_filter_col: "id_e"
-data_path: "data/encuesta.csv"
-codebook_path: "data/Codebook.xlsx"
-polygons_path: "data/polygons.geojson"
+lat_col: p002__Latitude
+lon_col: p002__Longitude
+key_filter_col: SECTOR
+data_path: data/encuesta.csv
+codebook_path: data/Codebook.xlsx
+polygons_path: data/polygons.geojson
 codebook_long: true
 missing_as: []

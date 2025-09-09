@@ -1,12 +1,14 @@
 tabulados:
-  - name: Perfil automático
+  - name: Perfil seleccionado
     tables:
-      - freq: "nvivienda__1"
-      - freq: "enc"
-      - freq: "sexo_jefe_estr_hg1"
-      - freq: "p004"
-      - freq: "p004nm"
-      - freq: "p006"
+      - freq: "SECTOR"
+      - freq: "id_h"
+      - freq: "id_v"
+      - freq: "sexom"
+      - freq: "sexoh"
+      - freq: "sexonh"
+      - freq: "sexonm"
+      - freq: "sexo"
       - crosstab:
-          row: "nvivienda__1"
-          col: "enc"
+          row: "SECTOR"
+          col: "id_h"
