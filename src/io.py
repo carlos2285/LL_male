@@ -7,13 +7,12 @@ def read_data(path: str) -> pd.DataFrame:
     p = Path(path)
     if not p.exists():
         raise FileNotFoundError(f"No se encuentra el archivo de datos: {path}")
-    try:
-        return pd.read_csv(p, low_memory=False)
-    except Exception:
+    for enc in [None, "utf-8-sig", "latin-1"]:
         try:
-            return pd.read_csv(p, encoding="utf-8-sig", low_memory=False)
+            return pd.read_csv(p, encoding=enc, low_memory=False)
         except Exception:
-            return pd.read_csv(p, encoding="latin-1", low_memory=False)
+            continue
+    raise RuntimeError(f"No pude leer {path}")
 
 def read_codebook(path: str) -> pd.DataFrame:
     p = Path(path)
@@ -27,7 +26,6 @@ def read_codebook(path: str) -> pd.DataFrame:
 def read_geojson(path: str) -> dict:
     p = Path(path)
     if not p.exists():
-        # retornar vacío
         return {"type": "FeatureCollection", "features": []}
     with open(p, "r", encoding="utf-8") as f:
         return json.load(f)

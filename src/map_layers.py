@@ -3,7 +3,7 @@ import pydeck as pdk
 import pandas as pd
 
 def scatter_points(df: pd.DataFrame, lat_col: str, lon_col: str, get_fill_color="[0, 128, 255]"):
-    if lat_col not in df.columns or lon_col not in df.columns:
+    if not lat_col or not lon_col or lat_col not in df.columns or lon_col not in df.columns:
         return None
     pts = df.dropna(subset=[lat_col, lon_col])
     if pts.empty:
