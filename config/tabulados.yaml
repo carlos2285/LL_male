@@ -1,14 +1,171 @@
-tabulados:
-  - name: Perfil seleccionado
-    tables:
-      - freq: "SECTOR"
-      - freq: "vivienda"
-      - freq: "hgr_n"
-      - freq: "nvivienda__0"
-      - freq: "nvivienda__0c"
-      - freq: "nvivienda__1"
-      - freq: "nvivienda__1c"
-      - freq: "nvivienda__2"
-      - crosstab:
-          row: "SECTOR"
-          col: "vivienda"
+blocks:
+- name: B — Características físicas de la estructura (todos)
+  filter: {}
+  tables:
+  - freq: p004
+  - freq: p005
+  - freq: p006
+  - freq: p007
+  - freq: p008
+  - crosstab:
+      row: p004
+      col: p005
+  - crosstab:
+      row: p005
+      col: p006
+  - crosstab:
+      row: p005
+      col: p007
+  - crosstab:
+      row: p005
+      col: p008
+  - crosstab:
+      row: p004
+      col: p006
+  - crosstab:
+      row: p004
+      col: p007
+  - crosstab:
+      row: p004
+      col: p008
+- name: C — Hogares en la estructura (p004 = vivienda o mixto)
+  filter:
+    in:
+      p004:
+      - vivienda
+      - mixto
+  tables:
+  - summary:
+      var: nvivienda
+  - freq: p009a
+  - freq: p009b
+  - freq: p010
+  - freq: sexo_jefatura
+  - freq: p011
+  - crosstab:
+      row: sexo_jefatura
+      col: p010
+  - crosstab:
+      row: sexo_jefatura
+      col: p015
+  - crosstab:
+      row: sexo_jefatura
+      col: p005
+  - crosstab:
+      row: sexo_jefatura
+      col: p014
+  - crosstab:
+      row: sexo_jefatura
+      col: p011
+  - crosstab:
+      row: p010
+      col: p015
+  - crosstab:
+      row: p010
+      col: p005
+- name: D — Situación socioeconómica (p004 = vivienda o mixto)
+  filter:
+    in:
+      p004:
+      - vivienda
+      - mixto
+  tables:
+  - summary:
+      var: p012
+  - freq: p013
+  - freq: p014
+  - freq: p022
+  - crosstab:
+      row: p014
+      col: sexo_jefatura
+  - crosstab:
+      row: p013
+      col: p011
+  - crosstab:
+      row: p022
+      col: p010
+  - crosstab:
+      row: p022
+      col: p015
+- name: E — Servicios y saneamiento (p004 = vivienda o mixto)
+  filter:
+    in:
+      p004:
+      - vivienda
+      - mixto
+  tables:
+  - freq: p015
+  - freq: p016
+  - freq: p017
+  - freq: p018
+  - freq: p019
+  - freq: p020
+  - freq: p021
+  - crosstab:
+      row: p015
+      col: p010
+  - crosstab:
+      row: p015
+      col: sexo_jefatura
+  - crosstab:
+      row: p015
+      col: p005
+  - crosstab:
+      row: p016
+      col: p017
+  - crosstab:
+      row: p018
+      col: p019
+  - crosstab:
+      row: p020
+      col: p021
+- name: F — Negocios (p004 = negocio o mixto)
+  filter:
+    in:
+      p004:
+      - negocio
+      - mixto
+  tables:
+  - freq: p025
+  - summary:
+      var: p026
+  - freq: p027
+  - freq: p028
+  - freq: p029
+  - freq: p030
+  - summary:
+      var: p031
+  - freq: p032
+  - crosstab:
+      row: p025
+      col: p027
+  - crosstab:
+      row: p027
+      col: p028
+  - crosstab:
+      row: p030
+      col: p029
+  - crosstab:
+      row: p026
+      col: p027
+  - crosstab:
+      row: p031
+      col: p027
+- name: G — Espacios públicos y percepción (todos)
+  filter: {}
+  tables:
+  - freq: p036
+  - freq: p035
+  - freq: p035tx
+  - crosstab:
+      row: p036
+      col: p004
+  - crosstab:
+      row: p036
+      col: sexo_jefatura
+  - crosstab:
+      row: p035
+      col: p035tx
+- name: I — Indicadores clave (resumen)
+  filter: {}
+  tables: []

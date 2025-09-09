@@ -1,0 +1,39 @@
+rules:
+  mal_estado:
+    var: p005
+    label_regex_any:
+    - mal
+    - malo
+    - pésim
+    - deficient
+  jefatura_femenina:
+    var: sexo_jefatura
+    label_regex_any:
+    - fem
+  tenencia_precaria:
+    var: p010
+    label_regex_any:
+    - precaria
+    - irregular
+    - ocup
+    - invad
+  sin_agua:
+    var: p015
+    label_regex_any:
+    - 'no'
+    - sin
+    - no disponible
+  saneamiento_inadecuado:
+    var: p018
+    label_regex_any:
+    - letrina
+    - inadecu
+    - ninguno
+  negocio_sin_permiso:
+    var: p027
+    label_regex_any:
+    - 'no'
+    - sin
+  negocio_personal_formal:
+    var: p030
+    threshold: 1
