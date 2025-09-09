@@ -30,7 +30,7 @@ blocks:
       col: p008
 - name: C — Hogares en la estructura (p004 = vivienda o mixto)
   filter:
-    in:
+    in_text:
       p004:
       - vivienda
       - mixto
@@ -65,7 +65,7 @@ blocks:
       col: p005
 - name: D — Situación socioeconómica (p004 = vivienda o mixto)
   filter:
-    in:
+    in_text:
       p004:
       - vivienda
       - mixto
@@ -89,7 +89,7 @@ blocks:
       col: p015
 - name: E — Servicios y saneamiento (p004 = vivienda o mixto)
   filter:
-    in:
+    in_text:
       p004:
       - vivienda
       - mixto
@@ -121,7 +121,7 @@ blocks:
       col: p021
 - name: F — Negocios (p004 = negocio o mixto)
   filter:
-    in:
+    in_text:
       p004:
       - negocio
       - mixto

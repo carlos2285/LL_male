@@ -12,6 +12,26 @@ from src.map_layers import scatter_points, polygons_layer
 from src.features import apply_all
 from src.indicators import compute_indicators
 
+# ---- YAML import (no dynamic pip inside cached funcs). If missing, show friendly error and stop.
+try:
+    import yaml
+except Exception as e:
+    yaml = None
+
+def _require_yaml():
+    if yaml is None:
+        st.error("Falta la dependencia **PyYAML**. Agrega `pyyaml` a `requirements.txt` en la raíz del repo y reinicia la app (Manage → Restart).")
+        st.stop()
+
+def _safe_label(var_labels, key):
+    val = var_labels.get(key, key)
+    try:
+        s = str(val)
+    except Exception:
+        s = key if isinstance(key, str) else repr(key)
+    if s.lower() == "nan":
+        s = key if isinstance(key, str) else repr(key)
+    return s
 
 # ---- UI helpers seguros ----
 def _safe_text(x):
@@ -37,26 +57,10 @@ def ui_selectbox(label, options, index=0, key=None):
         index = 0
     return st.selectbox(label_s, opts, index=min(index, len(opts)-1), key=key)
 
-
-try:
-    import yaml
-except Exception:
-    import sys, subprocess
-    subprocess.check_call([sys.executable, "-m", "pip", "install", "pyyaml"])
-    import yaml
-
-def _safe_label(var_labels, key):
-    val = var_labels.get(key, key)
-    try:
-        s = str(val)
-    except Exception:
-        s = key if isinstance(key, str) else repr(key)
-    if s.lower() == "nan":
-        s = key if isinstance(key, str) else repr(key)
-    return s
-
 st.set_page_config(page_title="Encuesta Dashboard", layout="wide")
 
+# --- Load settings and tabs ---
+_require_yaml()
 CFG_PATH = Path("config/settings.yaml")
 TAB_PATH = Path("config/tabulados.yaml")
 
@@ -64,20 +68,21 @@ with open(CFG_PATH, "r", encoding="utf-8") as f:
     CFG = yaml.safe_load(f)
 
 @st.cache_data(show_spinner=False)
-def load_all():
+def load_all(CFG):
     df = read_data(CFG["data_path"])
     cb = read_codebook(CFG["codebook_path"])
     var_labels, val_labels = build_label_maps(cb, df_columns=list(df.columns))
     geojson_polys = read_geojson(CFG["polygons_path"])
     return df, var_labels, val_labels, geojson_polys
 
-df, var_labels, val_labels, geojson_polys = load_all()
+df, var_labels, val_labels, geojson_polys = load_all(CFG)
+
+# Apply labels and derived features
 df_labeled = apply_value_labels(df, val_labels)
-# Derivadas
 df_labeled = apply_all(df_labeled)
-# Etiqueta para derivadas
 var_labels.setdefault('sexo_jefatura', 'Sexo de la jefatura')
 
+# Sidebar filters
 st.sidebar.header("Filtros")
 key_filter_col = CFG.get("key_filter_col")
 available_cols = list(df_labeled.columns)
@@ -92,22 +97,13 @@ if key_filter_col in df_labeled.columns:
     mask = df_labeled[key_filter_col].isin(selected_values) if selected_values else pd.Series(True, index=df_labeled.index)
 else:
     st.sidebar.info("No se encontró columna de filtro global; usando todo el conjunto.")
-    mask = pd.Series([True]*len(df_labeled))
+    mask = pd.Series(True, index=df_labeled.index)
 
 df_f = df_labeled[mask].copy()
 
-if not df_f.empty:
-    nunique = df_f.nunique(dropna=True).sort_values()
-    cand_filters = [c for c in nunique.index if 2 <= nunique[c] <= 10 and c != (key_filter_col or "")][:3]
-    for c in cand_filters:
-        vals = sorted([v for v in df_f[c].dropna().unique().tolist()])
-        sel = ui_multiselect(_safe_label(var_labels, c), vals, default=[], key=f"ms_{c}")
-        if sel:
-            df_f = df_f[df_f[c].isin(sel)]
-
+# KPIs
 st.title("Encuesta Dashboard")
 st.caption("Filtros aplicados en la barra lateral.")
-
 col1, col2, col3 = st.columns(3)
 col1.metric("Registros (n)", f"{len(df_f):,}")
 w_col = CFG.get("weight_col")
@@ -121,24 +117,48 @@ if key_filter_col and key_filter_col in df_f.columns:
 else:
     col3.metric("#Grupos", "—")
 
+# Indicators
+from pathlib import Path as _P
+IND_PATH = _P("config/indicators.yaml")
+try:
+    with open(IND_PATH, "r", encoding="utf-8") as _f:
+        IND_RULES = yaml.safe_load(_f).get("rules", {})
+except Exception:
+    IND_RULES = {}
+with st.expander("📌 Indicadores clave (editables en config/indicators.yaml)"):
+    vals = compute_indicators(df_f, IND_RULES) if IND_RULES else {}
+    if vals:
+        cols = st.columns(min(4, len(vals)))
+        i = 0
+        for name, v in vals.items():
+            col = cols[i % len(cols)]
+            col.metric(name.replace("_", " ").title(), f"{v}%" if v is not None else "—")
+            i += 1
+    else:
+        st.caption("Configura reglas en indicators.yaml para ver métricas.")
+
 st.divider()
-
-with open(TAB_PATH, "r", encoding="utf-8") as f:
-    TAB = yaml.safe_load(f)
-
-
 st.header("Plan de tabulados (oficial)")
 with open(TAB_PATH, "r", encoding="utf-8") as f:
     PLAN = yaml.safe_load(f)
 
-def apply_block_filter(df_in: pd.DataFrame, spec: dict) -> pd.DataFrame:
+def apply_block_filter(df_in, spec: dict):
     if not spec:
         return df_in
     df_out = df_in.copy()
+    # Exact equality lists
     if "in" in spec:
         for var, values in spec["in"].items():
             if var in df_out.columns:
                 df_out = df_out[df_out[var].isin(values)]
+    # Case-insensitive substring contains (for labeled/unlabeled values)
+    if "in_text" in spec:
+        for var, values in spec["in_text"].items():
+            if var in df_out.columns:
+                s = df_out[var].astype(str).str.lower()
+                vals = [str(v).lower() for v in values]
+                keep = s.apply(lambda x: any(v in x for v in vals))
+                df_out = df_out[keep]
     if "eq" in spec:
         for var, value in spec["eq"].items():
             if var in df_out.columns:
@@ -165,16 +185,12 @@ for block in PLAN.get("blocks", []):
             w  = spec["crosstab"].get("weight") or w_col
             if row in dblock.columns and col in dblock.columns:
                 st.markdown(f"**Crosstab:** {_safe_label(var_labels, row)} × {_safe_label(var_labels, col)}")
-                # Versión binned si son numéricas
                 st.dataframe(crosstab_binned(dblock, row, col, weight=w, normalize="index"))
         elif "summary" in spec:
             v = spec["summary"].get("var")
             if v in dblock.columns:
                 st.markdown(f"**Resumen:** {_safe_label(var_labels, v)}")
                 st.dataframe(summarize_numeric(dblock, v, weight=w_col))
-st.divider()
-
-
 
 st.divider()
 with st.expander("🔧 Diagnóstico de etiquetas"):
@@ -188,7 +204,6 @@ with st.expander("🔧 Diagnóstico de etiquetas"):
 
 st.divider()
 st.header("Explorador de variables")
-# Build mapping var->label and label->var para selección por etiqueta
 vars_sorted = sorted(df_f.columns)
 labels_map = {v: _safe_label(var_labels, v) for v in vars_sorted}
 reverse_map = {labels_map[v]: v for v in vars_sorted}
@@ -201,7 +216,6 @@ if sel_var and sel_var in df_f.columns:
 
 st.divider()
 st.header("Tabulado ad-hoc")
-# Sugerir variables categóricas de baja cardinalidad para row/col
 nunq_all = df_f.nunique(dropna=True) if not df_f.empty else df_labeled.nunique(dropna=True)
 cat_vars = [c for c in nunq_all.index if 2 <= nunq_all[c] <= 20]
 lab_cat = sorted([labels_map.get(c, c) for c in cat_vars])
@@ -214,25 +228,22 @@ peso_lab = ui_selectbox("Ponderación", peso_opts, key="adhoc_w")
 peso_sel = None if peso_lab == "(sin peso)" else w_col
 if row_var and col_var and row_var in df_f.columns and col_var in df_f.columns:
     st.markdown(f"**Crosstab ad-hoc:** {_safe_label(var_labels, row_var)} × {_safe_label(var_labels, col_var)}")
-    st.dataframe(crosstab(df_f, row_var, col_var, weight=peso_sel, normalize="index"))
+    st.dataframe(crosstab_binned(df_f, row_var, col_var, weight=peso_sel, normalize="index"))
 
+st.divider()
 st.header("Mapa (pydeck)")
 lat_col = CFG.get("lat_col")
 lon_col = CFG.get("lon_col")
-
 initial_view = pdk.ViewState(latitude=13.7, longitude=-89.2, zoom=8)
 layers = []
-
 poly_layer = polygons_layer(geojson_polys)
 if poly_layer:
     layers.append(poly_layer)
-
 pt_layer = scatter_points(df_f, lat_col, lon_col)
 if pt_layer:
     layers.append(pt_layer)
-
 if layers:
-    tooltip = {"text": f"{key_filter_col}: {{{ key_filter_col }}}"}
+    tooltip = {"text": f"{key_filter_col}: {{{ {key_filter_col} }}}"}
     st.pydeck_chart(pdk.Deck(map_style="mapbox://styles/mapbox/light-v9", initial_view_state=initial_view, layers=layers, tooltip=tooltip))
 else:
     st.info("No hay capas cargadas. Sube polygons.geojson y verifica lat/lon en settings.yaml.")
