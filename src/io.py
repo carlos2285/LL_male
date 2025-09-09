@@ -17,7 +17,7 @@ def read_data(path: str) -> pd.DataFrame:
 def read_codebook(path: str) -> pd.DataFrame:
     p = Path(path)
     if not p.exists():
-        raise FileNotFoundError(f"No se encuentra el codebook: {path}")
+        return pd.DataFrame(columns=["variable","value","label_value","label_variable"])
     if p.suffix.lower() in [".xlsx", ".xls"]:
         return pd.read_excel(p, sheet_name=0)
     else:

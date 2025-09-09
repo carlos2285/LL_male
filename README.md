@@ -1,9 +1,9 @@
 
 # Encuesta Dashboard (Streamlit Cloud-ready)
+Incluye:
+- Mapeo robusto de etiquetas (variables/valores) desde Codebook.xlsx
+- Filtro global 'SECTOR' si existe
+- Paracaídas para PyYAML
+- Tabulados curados (excluye ids/coords)
 
-1) Sube todo este folder a un repo (GitHub).
-2) En Streamlit Cloud, selecciona `app.py` y usa `requirements.txt`.
-3) Reemplaza `data/polygons.geojson` con tu GeoJSON real (WGS84).
-
-Edita `config/settings.yaml` para ajustar: id_col, weight_col, lat_col, lon_col, key_filter_col.
-El plan de tabulados está en `config/tabulados.yaml`.
+Despliegue: sube a GitHub y lanza en Streamlit apuntando a app.py

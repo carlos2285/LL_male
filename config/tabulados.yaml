@@ -2,13 +2,13 @@ tabulados:
   - name: Perfil seleccionado
     tables:
       - freq: "SECTOR"
-      - freq: "id_h"
-      - freq: "id_v"
-      - freq: "sexom"
-      - freq: "sexoh"
-      - freq: "sexonh"
-      - freq: "sexonm"
-      - freq: "sexo"
+      - freq: "vivienda"
+      - freq: "hgr_n"
+      - freq: "nvivienda__0"
+      - freq: "nvivienda__0c"
+      - freq: "nvivienda__1"
+      - freq: "nvivienda__1c"
+      - freq: "nvivienda__2"
       - crosstab:
           row: "SECTOR"
-          col: "id_h"
+          col: "vivienda"

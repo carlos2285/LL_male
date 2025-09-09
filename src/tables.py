@@ -3,7 +3,9 @@ import pandas as pd
 from typing import Optional
 
 def freq(df: pd.DataFrame, var: str, weight: Optional[str] = None) -> pd.DataFrame:
-    x = df.dropna(subset=[var]) if var in df.columns else df.iloc[0:0].copy()
+    if var not in df.columns or df.empty:
+        return pd.DataFrame({var: [], "n": [], "%": []})
+    x = df.dropna(subset=[var])
     if weight and weight in x.columns:
         s = x.groupby(var)[weight].sum()
         total = s.sum()
@@ -17,7 +19,11 @@ def freq(df: pd.DataFrame, var: str, weight: Optional[str] = None) -> pd.DataFra
     return out
 
 def crosstab(df: pd.DataFrame, row: str, col: str, weight: Optional[str] = None, normalize: Optional[str] = "index") -> pd.DataFrame:
-    x = df.dropna(subset=[row, col]) if row in df.columns and col in df.columns else df.iloc[0:0].copy()
+    if row not in df.columns or col not in df.columns or df.empty:
+        return pd.DataFrame()
+    x = df.dropna(subset=[row, col])
+    if x.empty:
+        return pd.DataFrame()
     if weight and weight in x.columns:
         pivot = x.pivot_table(index=row, columns=col, values=weight, aggfunc="sum", fill_value=0)
     else:
